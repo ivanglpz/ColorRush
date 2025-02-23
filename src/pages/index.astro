@@ -224,16 +224,13 @@ import Layout from "../layouts/Layout.astro";
     const doc = new jsPDF();
 
     function addHeader() {
-      doc.setFont("helvetica", "bold"); // Establecer fuente en negrita
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text(`Color Rush`, 10, 14); // Primer texto en negrita
-
-      // Regresar a la fuente normal para el siguiente texto
-      doc.setFont("helvetica", "normal"); // Fuente normal
+      doc.text(`Color Rush`, 10, 14);
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
-      doc.text(`Extract Colors from Any Image!`, 10, 19); // Texto normal
+      doc.text(`Extract Colors from Any Image!`, 10, 19);
     }
-    // Primera página con una imagen a tamaño completo A4
     addHeader();
     const img = new Image();
     img.src = item?.b64;
@@ -241,36 +238,25 @@ import Layout from "../layouts/Layout.astro";
       const imgWidth = img.width;
       const imgHeight = img.height;
 
-      // Tamaño A4 en milímetros (210mm x 297mm)
+      const frameX = 10;
+      const frameY = 25;
+      const frameWidth = 190;
+      const frameHeight = 260;
 
-      // Definir las dimensiones del marco dentro del formato A4
-      const frameX = 10; // Posición horizontal del marco
-      const frameY = 25; // Posición vertical del marco
-      const frameWidth = 190; // Ancho del marco
-      const frameHeight = 260; // Alto del marco
-
-      // Dibujar el marco en el PDF (puedes eliminar esta línea si solo quieres el marco visualmente sin dibujarlo)
-      doc.setDrawColor(0); // Color del borde del marco
+      doc.setDrawColor(0);
       doc.setLineWidth(0.5);
-      doc.rect(frameX, frameY, frameWidth, frameHeight); // Dibuja el marco
+      doc.rect(frameX, frameY, frameWidth, frameHeight);
 
-      // Calcular el factor de escala para ajustar la imagen proporcionalmente
-
-      // Calcular el factor de escala para ajustar la imagen dentro del marco
       const scale = Math.min(frameWidth / imgWidth, frameHeight / imgHeight);
 
-      // Calcular el tamaño final de la imagen después de aplicar la escala
       const scaledWidth = imgWidth * scale;
       const scaledHeight = imgHeight * scale;
 
-      // Calcular la posición para centrar la imagen dentro del marco
       const offsetX = frameX + (frameWidth - scaledWidth) / 2;
       const offsetY = frameY + (frameHeight - scaledHeight) / 2;
 
-      // Agregar la imagen al PDF dentro del marco, ajustada y centrada
       doc.addImage(img, "JPEG", offsetX, offsetY, scaledWidth, scaledHeight);
 
-      // Agregar una nueva página para la lista de colores
       doc.addPage();
       addHeader();
 
@@ -315,6 +301,98 @@ import Layout from "../layouts/Layout.astro";
       doc.save(`${uuidv4()}.pdf`);
     };
   };
+  const handleCreateImage = async (item: IData) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // 🔹 Ajustamos el tamaño del canvas (semi-cuadrado)
+    canvas.width = 900; // Ancho fijo de 900px
+    canvas.height = 1100; // Ajuste de altura para dejar espacio a los colores
+
+    const img = new Image();
+    img.src = item?.b64;
+
+    img.onload = function () {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Título
+      ctx.fillStyle = "black";
+      ctx.font = "bold 28px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Color Rush", 125, 60);
+
+      ctx.font = "18px Arial";
+      ctx.fillText("Extract Colors from Any Image!", 175, 80);
+
+      // Marco
+      const frameX = 50;
+      const frameY = 95;
+      const frameWidth = canvas.width - frameX * 2; // Se ajusta dinámicamente
+      const frameHeight = 800;
+
+      ctx.beginPath();
+      ctx.rect(frameX, frameY, frameWidth, frameHeight);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 🔹 Ajustar imagen al marco con efecto contain
+      const imgRatio = img.width / img.height;
+      const frameRatio = frameWidth / frameHeight;
+
+      let drawWidth, drawHeight, offsetX, offsetY;
+
+      if (imgRatio > frameRatio) {
+        drawWidth = frameWidth;
+        drawHeight = frameWidth / imgRatio;
+        offsetX = frameX;
+        offsetY = frameY + (frameHeight - drawHeight) / 2; // Centrar verticalmente
+      } else {
+        drawHeight = frameHeight;
+        drawWidth = frameHeight * imgRatio;
+        offsetX = frameX + (frameWidth - drawWidth) / 2; // Centrar horizontalmente
+        offsetY = frameY;
+      }
+
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+      // 🔹 Dibujar colores debajo del marco
+      const colorSize = 50; // Tamaño de cada cuadrado de color
+      const spacing = 10; // Espacio entre cuadrados
+      const colorsYStart = frameY + frameHeight + 20; // Posición Y de inicio
+
+      let currentX = frameX;
+      let currentY = colorsYStart;
+
+      item?.colors.forEach((color) => {
+        if (currentX + colorSize > frameX + frameWidth) {
+          // Si no cabe, nueva fila
+          currentX = frameX;
+          currentY += colorSize + spacing;
+        }
+
+        ctx.fillStyle = color;
+        ctx.fillRect(currentX, currentY, colorSize, colorSize);
+
+        // Borde para los cuadrados
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(currentX, currentY, colorSize, colorSize);
+
+        // Mover a la siguiente posición en X
+        currentX += colorSize + spacing;
+      });
+
+      // 🔹 Descargar imagen
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL();
+      link.download = `${uuidv4()}.jpg`;
+      link.click();
+    };
+  };
+
   list_element?.addEventListener("change", (event) => {
     const target = event.target as HTMLSelectElement; // Aseguramos que event.target es un HTMLSelectElement
 
@@ -356,6 +434,7 @@ import Layout from "../layouts/Layout.astro";
           handleCreatePDF(item);
           return;
         }
+        handleCreateImage(item);
         return;
       }
     }
