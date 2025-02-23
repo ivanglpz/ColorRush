@@ -23,7 +23,21 @@ Color Rush is a powerful tool that allows you to extract colors from any image i
 
 ## Installation
 
-To get started, simply visit [your website link here]. No installation is required – just upload your image and start extracting colors!
+```bash
+git clone https://github.com/ivanglpz/Colorush.git
+```
+
+install dependencies
+
+```bash
+pnpm install
+```
+
+run server development
+
+```bash
+pnpm dev
+```
 
 ## Contributing
 
