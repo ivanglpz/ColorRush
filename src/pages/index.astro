@@ -274,7 +274,6 @@ import Layout from "../layouts/Layout.astro";
       doc.addPage();
       addHeader();
 
-      // Segunda página con una lista de colores
       const colors = item?.colors;
       // Dibujar un cuadrado para cada color
       let xPosition = 10; // Posición horizontal inicial
@@ -291,9 +290,7 @@ import Layout from "../layouts/Layout.astro";
           "F"
         );
 
-        // Calcular el ancho del texto
         const text = `${color}`;
-        const textWidth = doc.getTextWidth(text); // Obtener el ancho del texto
         const xTextPosition = 25;
 
         // Calcular la posición vertical para centrar el texto en la fila
@@ -324,8 +321,6 @@ import Layout from "../layouts/Layout.astro";
         data.set(id, { ...item, exportType });
         return;
       }
-
-      console.log(type, id, exportType);
     }
   });
 
