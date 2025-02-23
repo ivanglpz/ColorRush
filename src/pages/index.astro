@@ -1,11 +1,389 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from "../layouts/Layout.astro";
 ---
 
+<script>
+  import { v4 as uuidv4 } from "uuid";
+  import { copyToClipboard } from "../utils/clipboard";
+  import { prominent } from "../utils/color";
+  import { groupColors, positionX } from "../utils/figma";
+
+  const inputfile = document.getElementById(
+    "input_file_image"
+  ) as HTMLInputElement;
+  const button = document.getElementById("button_upload_image");
+  const list_element = document.getElementById("list_data");
+
+  type IData = {
+    id: string;
+    b64: string;
+    exportType: "image" | "pdf";
+    colors: string[];
+  };
+
+  const data = new Map<string, IData>();
+
+  const render = () => {
+    if (!list_element) return;
+    list_element.innerHTML = "";
+    const newChilds = Array.from(data.values())
+      ?.reverse()
+      ?.map((e) => {
+        return `
+        <li class="card">
+           <img class="card_image" src="${e?.b64}"/>
+            <div class="card_content_right">
+                <ul class="card_list_colors">
+                  ${e?.colors
+                    ?.map((i) => {
+                      return `
+                      <li class="card_list_item_color"  style="background-color:${i}">
+                      </li>
+                    `;
+                    })
+                    ?.join("")}
+                </ul>
+                <section class="card_container_footer_actions">
+                  <button  data-user="export" id="${e?.id}" class="card_button_export_figma">
+                    <svg width="9" height="13" viewBox="0 0 9 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_28_237)">
+                        <path d="M2.25 13C3.492 13 4.5 12.0293 4.5 10.8333V8.66663H2.25C1.008 8.66663 0 9.63729 0 10.8333C0 12.0293 1.008 13 2.25 13Z" fill="#0ACF83"/>
+                        <path d="M0 6.50004C0 5.30404 1.008 4.33337 2.25 4.33337H4.5V8.66671H2.25C1.008 8.66671 0 7.69604 0 6.50004Z" fill="#A259FF"/>
+                        <path d="M0 2.16667C0 0.970667 1.008 0 2.25 0H4.5V4.33333H2.25C1.008 4.33333 0 3.36267 0 2.16667Z" fill="#F24E1E"/>
+                        <path d="M4.5 0H6.75C7.992 0 9 0.970667 9 2.16667C9 3.36267 7.992 4.33333 6.75 4.33333H4.5V0Z" fill="#FF7262"/>
+                        <path d="M9 6.50004C9 7.69604 7.992 8.66671 6.75 8.66671C5.508 8.66671 4.5 7.69604 4.5 6.50004C4.5 5.30404 5.508 4.33337 6.75 4.33337C7.992 4.33337 9 5.30404 9 6.50004Z" fill="#1ABCFE"/>
+                        </g>
+                        <defs>
+                        <clipPath id="clip0_28_237">
+                        <rect width="9" height="13" fill="white"/>
+                        </clipPath>
+                        </defs>
+                    </svg>
+                    Export to Figma
+                  </button>
+                  <div>
+                    <select data-user="change_download"  id="${e?.id}" class="card_selector">
+                      <option value="image">Image</option>
+                      <option value="pdf">PDF</option>
+                    </select>
+                    <button data-user="download" id="${e?.id}" class="card_button_download">
+                      Download
+                    </button>
+                  </div>
+                </section>
+            </div>
+            <button data-user="delete"  id="${e?.id}" class="card_button_delete">
+              <svg width="10" height="10" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="#7C1515"/>
+              </svg>
+            </button>
+        </li>
+        `;
+      })
+      ?.join("");
+    list_element.innerHTML = newChilds;
+  };
+
+  const exprtColorsToFigma = async (id: string) => {
+    const item = data?.get(id);
+    if (!item?.colors) return;
+    const exportFigmaColors = groupColors(item?.colors)
+      ?.map((item, indexrow) => {
+        return item
+          ?.map(
+            (hex, index) => `
+              <rect
+                width="50"
+                height="50"
+                x="${positionX[index as keyof typeof positionX]}%"
+                y="${50 * indexrow + 1}%"
+                fill="${hex}"
+              />
+            `
+          )
+          ?.join("");
+      })
+      ?.join("");
+    const svg = `
+       <svg width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+            ${exportFigmaColors}
+       </svg>
+       `;
+    await copyToClipboard(svg);
+    alert("Colors have been successfully copied.");
+  };
+
+  const addNewData = (b64: string, colors: string[]) => {
+    const payload: IData = {
+      b64,
+      colors,
+      id: uuidv4(),
+      exportType: "image",
+    };
+    data.set(payload.id, payload);
+    render();
+  };
+  const deleteData = (id: string) => {
+    data.delete(id);
+    render();
+  };
+  list_element?.addEventListener("change", (event) => {
+    const target = event.target as HTMLSelectElement; // Aseguramos que event.target es un HTMLSelectElement
+
+    // Verificamos si el target es un <select>
+    if (target && target.matches("select")) {
+      // Accedemos a los atributos
+      const type = target.dataset.user; // dataset es un objeto que contiene los atributos data-* del elemento
+      const id = target.id; // id del <select>
+      const exportType = target.value as IData["exportType"]; // valor seleccionado en el <select>
+
+      if (type === "change_download") {
+        const item = data?.get(id);
+        if (!item) return;
+        data.set(id, { ...item, exportType });
+        return;
+      }
+
+      console.log(type, id, exportType);
+    }
+  });
+
+  list_element?.addEventListener("click", (event: MouseEvent) => {
+    const target = event.target as HTMLElement; // Aseguramos que event.target es un elemento HTML
+    if (target.matches("button")) {
+      const button = target as HTMLButtonElement; // Hacemos type assertion a un botón
+      const id = button.id; // Ahora TypeScript reconoce la propiedad id
+      const type = button?.dataset?.user;
+      if (!type) return;
+      if (type === "delete") {
+        deleteData(id);
+        return;
+      }
+      if (type === "export") {
+        exprtColorsToFigma(id);
+        return;
+      }
+      if (type === "download") {
+        const item = data?.get(id);
+        if (!item) return;
+        console.log(item);
+        return;
+      }
+    }
+  });
+
+  button?.addEventListener("click", () => {
+    inputfile?.click();
+  });
+
+  inputfile?.addEventListener("change", (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = async (data) => {
+      if (data?.target?.error) return;
+      const b64 = data?.target?.result;
+      if (!b64) return;
+      if (typeof b64 !== "string") return;
+
+      const colors = await prominent(b64, {
+        group: 20,
+        amount: 20,
+        format: "hex",
+        sample: 20,
+      });
+      if (typeof colors === "string") {
+        addNewData(b64, [colors]);
+        return;
+      }
+      addNewData(b64, colors);
+
+      inputfile.value = "";
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+
 <Layout>
-	<Welcome />
+  <main class="main_container">
+    <div class="wrapper_styles_container">
+      <section class="section_information_container">
+        <h1 class="title">✨ Extract Colors from<br /> Any Image! 🎨</h1>
+        <p class="description">
+          Instant Color Palette from Your Image! <br />Upload, extract, and
+          download in seconds! 🚀
+        </p>
+        <button id="button_upload_image" class="button_upload"
+          >Upload Image</button
+        >
+        <input
+          type="file"
+          id="input_file_image"
+          accept="image/jpeg, image/png"
+          style="display: none;"
+        />
+      </section>
+      <ul id="list_data" class="list_data_section"></ul>
+    </div>
+  </main>
 </Layout>
+
+<style>
+  :global(.card_image) {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  :global(.card_list_colors) {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    height: 100%;
+  }
+  :global(.card_list_item_color) {
+    flex-basis: 40px; /* Cada ítem inicia con 150px */
+    flex-grow: 1; /* Los ítems crecerán para ocupar el espacio disponible */
+    flex-shrink: 0; /* No se reducirán si el espacio es menor */
+    list-style: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    border: 1px solid rgb(58, 58, 58);
+  }
+
+  :global(.card) {
+    background-color: #111113;
+    border: 1px solid #2b2b2b;
+    border-radius: 8px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 1rem;
+    position: relative;
+  }
+  @media (max-width: 768px) {
+    :global(.card) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  :global(.card_content_right) {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+  :global(.card_container_footer_actions) {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1em;
+  }
+
+  :global(.card_button_export_figma) {
+    background-color: #484848;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+
+    width: fit-content;
+    cursor: pointer;
+    border: none;
+    color: white;
+  }
+
+  :global(.card_selector) {
+    background-color: #484848;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    width: fit-content;
+    cursor: pointer;
+    border: none;
+    color: white;
+  }
+
+  :global(.card_button_download) {
+    background-color: #ffffff;
+    color: #0d0d0e;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    width: fit-content;
+    cursor: pointer;
+    border: none;
+  }
+
+  :global(.card_button_delete) {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 30px;
+    height: 30px;
+    border: 1.7px solid #7c1515;
+    background-color: #0d0d0e;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+  .title {
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 3rem;
+  }
+  .description {
+    text-align: center;
+    color: white;
+    font-weight: 400;
+    font-size: 19px;
+  }
+  .main_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1em;
+    padding: 20px;
+  }
+  .wrapper_styles_container {
+    display: flex;
+    max-width: 900px;
+    width: 100%;
+    flex-direction: column;
+  }
+  .section_information_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+    min-height: 30rem;
+    height: 100%;
+  }
+  .list_data_section {
+    padding: 0px;
+    margin: 0px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+  .button_upload {
+    background-color: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    width: fit-content;
+    cursor: pointer;
+    border: none;
+  }
+</style>
