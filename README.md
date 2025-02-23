@@ -1,48 +1,34 @@
-# Astro Starter Kit: Basics
+# Color Rush ✨ Extract Colors from Any Image! 🎨
 
-```sh
-npm create astro@latest -- --template basics
-```
+Color Rush is a powerful tool that allows you to extract colors from any image in just a few clicks! Whether you're working on a design project, creating a color palette, or just want to explore the vibrant hues of your favorite image, Color Rush makes it easy.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+![Texto alternativo](public/preview-image.png)
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Features
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+- **Upload any image**: Simply upload an image, and Color Rush will automatically detect its colors.
+- **Extract colors**: Get a full palette of colors extracted from the image.
+- **Export to Figma**: Export the extracted color palette directly to Figma for easy use in your design projects.
+- **Download with colors**: Download the image with the extracted colors highlighted.
+- **Export as PDF**: Get a downloadable PDF with the extracted colors.
 
-## 🚀 Project Structure
+## How to Use
 
-Inside of your Astro project, you'll see the following folders and files:
+1. **Upload your image**: Click the "Upload Image" button to select an image from your computer.
+2. **Extract colors**: Once the image is uploaded, Color Rush will analyze it and display the extracted colors.
+3. **Export options**:
+   - **Export to Figma**: Click the "Export to Figma" button to send your color palette directly to Figma.
+   - **Download with colors**: Download the image with its colors highlighted by clicking the "Download Image" button.
+   - **Export as PDF**: Click the "Export as PDF" button to get a PDF file with your color palette.
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Installation
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+To get started, simply visit [your website link here]. No installation is required – just upload your image and start extracting colors!
 
-## 🧞 Commands
+## Contributing
 
-All commands are run from the root of the project, from a terminal:
+If you'd like to contribute to the development of Color Rush, feel free to fork the repository and submit a pull request with your changes. We'd love to hear from you!
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## License
 
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+This project is licensed
